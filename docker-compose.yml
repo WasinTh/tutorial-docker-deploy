@@ -1,0 +1,37 @@
+version: '2'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - 80:80
+    links:
+      - app
+    volumes:
+      - /etc/localtime:/etc/localtime:ro  # Set container timezone
+      - static-volume:/web-static
+      - ./docker_conf/nginx.conf:/src/nginx.conf
+      - ./docker_conf:/src
+    command: ./src/run_nginx.sh
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+
+  app:
+    restart: always
+    container_name: app
+    environment:
+      - PROJECT=${PROJECT_NAME}
+      - WORKER_PROCESS=${WORKER_PROCESS}
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${DOMAIN_NAME}
+      - DJANGO_MANAGEPY_MIGRATE=${DJANGO_MANAGEPY_MIGRATE}
+    image: ${DOCKER_APP_IMAGE}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro  # Set container timezone
+      - static-volume:/usr/src/django_app/static
+    expose:
+      - 8001
+
+volumes:
+  static-volume:
